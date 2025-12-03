@@ -8,6 +8,10 @@ package sisop.pkg3dic2025.ippoliti;
  *
  * @author Gabriele
  */
+
+import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
+
 public class Sisop3dic2025Ippoliti {
 
     /**
