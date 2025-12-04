@@ -7,6 +7,7 @@ package sisop.pkg3dic2025.ippoliti;
 /**
  *
  * @author Gabriele
+ * - visabilità aggiunta a tutte le classi 
  */
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ public class Sisop3dic2025Ippoliti {
 
     /**
      * @param args the command line arguments
+     * 
      */
     public static void main(String[] args) {
 
@@ -83,21 +85,48 @@ class PrintThread {
     }
 }
 
-class Queue {
-
-    public void Queue(int L) {
-        this.L = L
-        ArrayList<int> a = new ArraiList(L);
+public class Queue<T> {         //T serve per il tipo generico della coda
+    private ArrayList<T> a;
+    private int L;
+    private final Semaphore mutex = new Semaphore(1);   //semafori necessari
+    private Semaphore vuoti;                            //per gli spazi, uguale riga sotto
+    private Semaphore pieni;
+    
+    public Queue(int L) {          //tolto void perché costruttore
+        this.L = L;
+        a = new ArrayList<>(L);    //sintassi sbagliata tolto ArrayList<int>
+        vuoti = new Semaphore(L);  // specificare
+        pieni = new Semaphore(0);
     }
 
-    public void Put(int v) {
-        this.v = v;
-        a.add(v);
+    public void put(T v) throws InterruptedException {
+        //this.v = v; non serve
+        vuoti.acquire();        //aspetta se la coda è piena bloccando il thread
+        mutex.acquire();        //serve per far entrare un thread alla volta
+        a.add(v);               
+        mutex.release();
+        pieni.release();        //c'è qualcosa in più da prelevare
     }
 
-    public void Remove() {
+    public void remove() throws InterruptedException {
+        pieni.acquire(); //l'inverso di quanto sopra, ci deve essere almeno qualcosa
+        mutex.acquire();
         a.remove(0);
+        mutex.release();
+        vuoti.release(); //toglie qualcosa
     }
+    
+    public T get() throws InterruptedException {
+        pieni.acquire();
+        mutex.acquire();
+        T v = a.get(0);
+        mutex.release();
+        vuoti.release(); // specificare
+        
+        return v;
+    }
+    
+    // qualcosa per le richieste finali da aggiungere
 }
 
 class ResultCollector {
