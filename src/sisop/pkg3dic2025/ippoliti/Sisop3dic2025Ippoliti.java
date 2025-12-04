@@ -7,7 +7,9 @@ package sisop.pkg3dic2025.ippoliti;
 /**
  *
  * @author Gabriele
- * - visabilità aggiunta a tutte le classi 
+ * - visabilità aggiunta a tutte le classi
+ * - aggiunti costruttori mancanti
+ * - aggiunti semafori mancanti
  */
 
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class GeneratorThread extends Thread {
     private int TG = 0;             
     private final Queue<Integer> q;
     private int n = 0;              //numero generato
-    public int count = 0;           //numero progressivo
+    public int count = 0;           //numero progressivo di generazione del valore
     
     public GeneratorThread(Queue<Integer> q, int TG) {
         this.TG = TG;
@@ -111,7 +113,7 @@ public class Queue<T> {         //T serve per il tipo generico della coda
 
     public void put(T v) throws InterruptedException {
         //this.v = v; non serve
-        vuoti.acquire();        //aspetta se la coda è piena bloccando il thread
+        vuoti.acquire();        //aspetta se la coda è piena bloccando il GeneratorThread
         mutex.acquire();        //serve per far entrare un thread alla volta
         a.add(v);               
         mutex.release();
@@ -123,13 +125,13 @@ public class Queue<T> {         //T serve per il tipo generico della coda
         mutex.acquire();
         a.remove(0);
         mutex.release();
-        vuoti.release(); //toglie qualcosa
+        vuoti.release(); //libera uno spazio
     }
     
     public T get() throws InterruptedException {
         pieni.acquire();
         mutex.acquire();
-        T v = a.get(0);
+        T v = a.get(0);         //rende il valore inserito più vecchio
         mutex.release();
         vuoti.release(); // specificare
         
