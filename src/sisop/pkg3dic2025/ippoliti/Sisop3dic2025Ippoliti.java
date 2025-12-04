@@ -14,6 +14,8 @@ package sisop.pkg3dic2025.ippoliti;
 
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
+import java.util.Scanner;
+import java.util.Random;
 
 public class Sisop3dic2025Ippoliti {
 
@@ -22,7 +24,11 @@ public class Sisop3dic2025Ippoliti {
      * 
      */
     public static void main(String[] args) throws InterruptedException {
-        //int N = System.in.writeln();
+        Scanner input = new Scanner(System.in);
+        int N = input.nextInt();
+        int L = input.nextInt();
+        
+        input.close(); 
         GeneratorThread gt = new GeneratorThread(q, TG);
         ProcessorThread[] pt = new ProcessorThread[N];
         Queue q = new Queue(L);
