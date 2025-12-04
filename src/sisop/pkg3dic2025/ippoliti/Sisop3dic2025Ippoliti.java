@@ -26,9 +26,9 @@ public class Sisop3dic2025Ippoliti {
         Queue q = new Queue(L);
         int N = System.in.writeln();
 
-        while (true) {
+        while(true) {
             gt.start();
-            for (int i = 0; i < N; i++)
+            for(int i = 0; i < N; i++)
                 pt.start();
 
             Sleep(10000);
@@ -36,28 +36,38 @@ public class Sisop3dic2025Ippoliti {
     }
 }
 
-class GeneratorThread extends thread {
+public class GeneratorThread extends Thread {
 
-    private int TG = 0;
-    private Queue q;
-
-    public void run(int TG, Queue q) throw InterruptedException {
+    private int TG = 0;             
+    private final Queue<Integer> q;
+    private int n = 0;              //numero generato
+    public int count = 0;           //numero progressivo
+    
+    public GeneratorThread(Queue<Integer> q, int TG) {
         this.TG = TG;
         this.q = q;
+    }
+
+    @Override
+    public void run() {
+        /*this.TG = TG; ---> nel costruttore
+        this.q = q;*/ 
 
         try {
-            while (true && q) {
-                TG++;
-                put(TG);
-                Sleep(1000);
+            while(true) {
+                q.put(n);
+                n++;
+                count++;
+                Thread.sleep(TG);       
             }
-        } catch {
-            InterruptedException e
+        }
+        catch(InterruptedException e) {
+            System.out.println("GeneratorThread terminato");
         }
     }
 }
 
-class PrecessorThread extends thread {
+class PrecessorThread extends Thread {
 
     private int N;
     private Queue q;
@@ -86,11 +96,11 @@ class PrintThread {
 }
 
 public class Queue<T> {         //T serve per il tipo generico della coda
-    private ArrayList<T> a;
-    private int L;
+    private final ArrayList<T> a;
+    private final int L;
     private final Semaphore mutex = new Semaphore(1);   //semafori necessari
-    private Semaphore vuoti;                            //per gli spazi, uguale riga sotto
-    private Semaphore pieni;
+    private final Semaphore vuoti;                            //per gli spazi, uguale riga sotto
+    private final Semaphore pieni;
     
     public Queue(int L) {          //tolto void perché costruttore
         this.L = L;
