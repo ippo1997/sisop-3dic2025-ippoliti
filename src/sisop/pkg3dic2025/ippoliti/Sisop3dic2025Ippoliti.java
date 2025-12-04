@@ -44,7 +44,7 @@ public class Sisop3dic2025Ippoliti {
     }
 }
 
-public class GeneratorThread extends Thread {
+class GeneratorThread extends Thread {
 
     private int TG = 0;             
     private final Queue<Integer> q;
@@ -84,6 +84,8 @@ class ProcessorThread extends Thread {
     private final Queue<Integer> q;
     private final ResultCollector rc;
     private final Random r = new Random();
+    private int num = 0; 
+    public int count = 0;
     
     public ProcessorThread(int s, int K, int TP, int DP, Queue<Integer> q, ResultCollector rc) {
         this.q = q;
@@ -111,7 +113,7 @@ class PrintThread {
     }
 }
 
-public class Queue<T> {         //T serve per il tipo generico della coda
+class Queue<T> {         //T serve per il tipo generico della coda
     private final ArrayList<T> a;
     private final int L;
     private final Semaphore mutex = new Semaphore(1);   //semafori necessari
