@@ -37,10 +37,10 @@ public class Sisop3dic2025Ippoliti {
         /* while(true) {
             gt.start();
             for(int i = 0; i < N; i++)
-                pt.start(); */
+                pt.start();
 
             Thread.sleep(10000);
-        }
+        } */
     }
 }
 
@@ -75,18 +75,26 @@ public class GeneratorThread extends Thread {
     }
 }
 
-class PrecessorThread extends Thread {
+class ProcessorThread extends Thread {
 
-    private int N;
-    private Queue q;
-    private Semaphore mutex;
-    public int v;
-
-    public void run(Queue q, int N, Semaphore mutex) {
+    private final int s;             //numero seriale del thread
+    private final int K;
+    private final int TP;
+    private final int DP;
+    private final Queue<Integer> q;
+    private final ResultCollector rc;
+    private final Random r = new Random();
+    
+    public ProcessorThread(int s, int K, int TP, int DP, Queue<Integer> q, ResultCollector rc) {
         this.q = q;
-        this.n = n;
-        this.v = v;
-
+        this.s = s;
+        this.K = K;
+        this.TP = TP;
+        this.DP = DP;
+        this.rc = rc;
+    }
+    
+    public void run() {
         try {
             mutex.aquire();
             v = q.Get();
