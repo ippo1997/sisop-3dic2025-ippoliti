@@ -21,19 +21,19 @@ public class Sisop3dic2025Ippoliti {
      * @param args the command line arguments
      * 
      */
-    public static void main(String[] args) {
-
-        GeneratorThread gt = new GeneratorThread();
-        ProcessorThread pt = new ProcessorThread();
+    public static void main(String[] args) throws InterruptedException {
+        //int N = System.in.writeln();
+        GeneratorThread gt = new GeneratorThread(q, TG);
+        ProcessorThread[] pt = new ProcessorThread[N];
         Queue q = new Queue(L);
-        int N = System.in.writeln();
 
-        while(true) {
+
+        /* while(true) {
             gt.start();
             for(int i = 0; i < N; i++)
-                pt.start();
+                pt.start(); */
 
-            Sleep(10000);
+            Thread.sleep(10000);
         }
     }
 }
