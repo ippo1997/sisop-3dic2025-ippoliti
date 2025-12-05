@@ -7,8 +7,7 @@ package sisop.pkg3dic2025.ippoliti;
 /**
  *
  * @author Gabriele
- * - visabilità aggiunta a tutte le classi
- * - aggiunti costruttori mancanti
+ * - aggiunti costruttori e metodi mancanti
  * - aggiunti semafori mancanti
  */
 
@@ -100,7 +99,7 @@ class ProcessorThread extends Thread {
     public void run() {
         try {
             while(true) {
-                Integer[] a = p.getK(K);            //aspetta K elementi per prenderli rimuovendo solo il primo -> da implementare
+                Integer[] a = q.getnum(K);            //aspetta K elementi per prenderli rimuovendo solo il primo
                 int progressivo = p;
                 p++;
                 count++;
@@ -130,7 +129,7 @@ class Queue<T> {         //T serve per il tipo generico della coda
     private final ArrayList<T> a;
     private final int L;
     private final Semaphore mutex = new Semaphore(1);   //semafori necessari
-    private final Semaphore vuoti;                            //per gli spazi, uguale riga sotto
+    private final Semaphore vuoti;                      //per gli spazi liberi o pieni
     private final Semaphore pieni;
     
     public Queue(int L) {          //tolto void perché costruttore
@@ -165,6 +164,24 @@ class Queue<T> {         //T serve per il tipo generico della coda
         vuoti.release(); // specificare
         
         return v;
+    }
+    
+    public T[] getnum(int K) throws InterruptedException {
+        for(int i = 0; i < K; i++)
+            pieni.acquire();
+        
+        mutex.acquire();                //entra in sezione critica per leggere i valori
+        T[] vett = (T[]) new Object[K]; //specificare
+        for(int i = 0; i < K; i++)
+            vett[i] = a.get(i);
+        a.remove(0);                    //liberato lo spazio contenente il più vecchio
+        mutex.release();
+        vuoti.release();                //rilasciato il vuoto
+        
+        for(int i = 0; i < K; i++)
+            pieni.release();            //rilasciati i restanti ancora pieni
+        
+        return vett;
     }
     
     // qualcosa per le richieste finali da aggiungere
