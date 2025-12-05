@@ -254,7 +254,7 @@ class Queue<T> {         //T serve per il tipo generico della coda
         mutex.acquire();
         T v = a.get(0);         //rende il valore inserito più vecchio
         mutex.release();
-        vuoti.release(); // specificare
+        pieni.release(); // specificare
         
         return v;
     }
