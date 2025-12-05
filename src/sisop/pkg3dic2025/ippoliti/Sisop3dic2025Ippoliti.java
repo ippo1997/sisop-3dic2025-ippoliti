@@ -38,8 +38,10 @@ public class Sisop3dic2025Ippoliti {
             for(int i = 0; i < N; i++)
                 pt.start();
 
-            Thread.sleep(10000);
+         --- sleep fuori ciclo ---   
         } */
+        
+        Thread.sleep(10000);
     }
 }
 
@@ -119,9 +121,24 @@ class ProcessorThread extends Thread {
     }
 }
 
-class PrintThread {
-    public void Print() {
-
+class PrintThread extends Thread {
+    private final ResultCollector rc;
+    
+    public PrintThread(ResultCollector rc) {
+        this.rc = rc;
+    }
+    
+    @Override
+    public void run() {
+        while(true) {
+            try {
+                Messaggio m = rc.get(); //prende messaggio successivo
+                System.out.println("Il messaggio " + m.k + " ha risultato = " + m.res);
+            } catch (InterruptedException e) {
+                System.out.println("PrintThread fermato");
+                return;
+            }
+        }
     }
 }
 
