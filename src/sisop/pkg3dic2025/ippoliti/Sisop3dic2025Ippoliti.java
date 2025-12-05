@@ -56,7 +56,7 @@ class GeneratorThread extends Thread {
         this.q = q;
     }
 
-    @Override
+    @Override                       //perché NetBeans me lo richiede?
     public void run() {
         /*this.TG = TG; ---> nel costruttore
         this.q = q;*/ 
@@ -84,7 +84,7 @@ class ProcessorThread extends Thread {
     private final Queue<Integer> q;
     private final ResultCollector rc;
     private final Random r = new Random();
-    private int num = 0; 
+    private int p = 0;              //specificare numero progressivo indipendente
     public int count = 0;
     
     public ProcessorThread(int s, int K, int TP, int DP, Queue<Integer> q, ResultCollector rc) {
@@ -96,13 +96,26 @@ class ProcessorThread extends Thread {
         this.rc = rc;
     }
     
+    @Override
     public void run() {
         try {
-            mutex.aquire();
-            v = q.Get();
-            q.Remove(0);
-        } catch {
-            InterruptedException e
+            while(true) {
+                Integer[] a = p.getK(K);            //aspetta K elementi per prenderli rimuovendo solo il primo -> da implementare
+                int progressivo = p;
+                p++;
+                count++;
+                
+                int somma = 0;
+                for (int v : a)
+                    somma = somma + v;
+                int tot = somma * s;                  //calcola il risultato
+                
+                Thread.sleep(TP + r.nextInt(DP + 1));           //specificare
+                rc.put(progressivo, a, tot);        //inserisce nel ResultCollector --> da implementare
+                
+            }
+        } catch (InterruptedException e){
+            System.out.println("ProcessorThread numero " + s + " --> terminato");
         }
     }
 }
