@@ -25,7 +25,7 @@ public class Sisop3dic2025Ippoliti {
      * 
      */
     
-    final static AtomicInteger globalSeq = new AtomicInteger(0); //soluzione per contatore condiciso da tutti i processorThread
+    final static AtomicInteger globalSeq = new AtomicInteger(0); //soluzione per avere contatore univoco condicviso da tutti i processorThread
     
     public static void main(String[] args) throws InterruptedException {
         Scanner input = new Scanner(System.in);
@@ -86,15 +86,6 @@ public class Sisop3dic2025Ippoliti {
         print1.join();
         print2.join();
         
-        System.out.println("GeneratorThread totali " + gt.getCount());
-          
-        for(int i = 0; i < N; i++) {
-            System.out.println("ProcessorThread " + (i+1) + "--> processati " + pt[i].getCount());
-        }
-        
-        System.out.println("PrintThread1 --> " + print1.getCount());
-        System.out.println("PrintThread2 --> " + print2.getCount());
-        
         try {
             System.out.println("Valori ancora in coda " + q.dimensione());
         } catch (InterruptedException e) {                                          //specificare
@@ -130,11 +121,7 @@ class GeneratorThread extends Thread {
         }
         catch(InterruptedException e) {}
         
-        System.out.println("GeneratorThread terminato. Tot " + count); //specificare prodotti cosa
-    }
-    
-    public int getCount() {
-        return count;
+        System.out.println("GeneratorThread terminato. Totale numeri generati: " + count); //specificare prodotti cosa
     }
 }
 
@@ -163,32 +150,25 @@ class ProcessorThread extends Thread {
     public void run() {
         try {
             while(true) {
-                Object[] a = q.getnum(K);            //aspetta K elementi per prenderli rimuovendo solo il primo
+                Integer[] a = q.getnum(K, new Integer[K]);            //aspetta K elementi per prenderli rimuovendo solo il primo
                 //int progressivo = p;
                 //p++;
                 int progressivo = Sisop3dic2025Ippoliti.globalSeq.getAndIncrement();
-
                 
                 int somma = 0;
-                for (Object o : a) {
-                    int v = (Integer) o;
+                for (int v : a) {
                     somma = somma + v;
                 }
                 int tot = somma * s;                  //calcola il risultato
+                count++;
                 
                 Thread.sleep(TP + r.nextInt(DP + 1));           //tempo variabile
                 Messaggio m = new Messaggio(progressivo, a, tot);
                 rc.put(m);        //inserisce nel ResultCollector --> da implementare Messaggio
-                
             }
         } catch (InterruptedException e){
-            System.out.println("ProcessorThread numero " + s + " --> terminato");
+            System.out.println("ProcessorThread " + s + "terminato. Messaggi totali: " + count);
         }
-        System.out.println("ProcessorThread totali: " + count);
-    }
-    
-    public int getCount() {
-        return count;
     }
 }
 
@@ -214,14 +194,8 @@ class PrintThread extends Thread {
                 count++;
                 Thread.sleep(IT);
             }
-        } catch (InterruptedException e) {
-            // terminazione richiesta
-        }
-        System.out.println("PrintThread terminato, stampati: " + count);
-    }
-
-    public int getCount() {
-        return count;
+        } catch (InterruptedException e) {}
+        System.out.println("PrintThread terminato --> stampati: " + count);
     }
 }
 
@@ -242,10 +216,10 @@ class Queue<T> {         //T serve per il tipo generico della coda
     public void put(T v) throws InterruptedException {
         //this.v = v; non serve
         vuoti.acquire();        //aspetta se la coda è piena bloccando il GeneratorThread
-        mutex.acquire();        //serve per far entrare un thread alla volta
+        mutex.acquire();        //serve per far entrare un thread alla volta --> sezione critica
         a.add(v);               
-        mutex.release();
-        pieni.release();        //c'è qualcosa in più da prelevare
+        mutex.release();         //esce dalla sezione critica
+        pieni.release();        //c'è qualcosa in più da poter prelevare
     }
 
     public void remove() throws InterruptedException {
@@ -266,12 +240,11 @@ class Queue<T> {         //T serve per il tipo generico della coda
         return v;
     }
     
-    public T[] getnum(int K) throws InterruptedException {
+    public T[] getnum(int K, T[] vett) throws InterruptedException {
         for(int i = 0; i < K; i++)
             pieni.acquire();
         
         mutex.acquire();                //entra in sezione critica per leggere i valori
-        T[] vett = (T[]) new Object[K]; //specificare
         for(int i = 0; i < K; i++)
             vett[i] = a.get(i);
         a.remove(0);                    //liberato lo spazio contenente il più vecchio
