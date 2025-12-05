@@ -134,7 +134,7 @@ class Queue<T> {         //T serve per il tipo generico della coda
     
     public Queue(int L) {          //tolto void perché costruttore
         this.L = L;
-        a = new ArrayList<>(L);    //sintassi sbagliata tolto ArrayList<int>
+        this.a = new ArrayList<>(L);    //sintassi sbagliata tolto ArrayList<int>
         vuoti = new Semaphore(L);  // specificare
         pieni = new Semaphore(0);
     }
@@ -184,7 +184,13 @@ class Queue<T> {         //T serve per il tipo generico della coda
         return vett;
     }
     
-    // qualcosa per le richieste finali da aggiungere
+    public int dimensione() throws InterruptedException {
+        mutex.acquire();
+        int d = a.size();
+        mutex.release();
+        
+        return d;
+    }
 }
 
 class ResultCollector {
