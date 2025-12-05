@@ -189,12 +189,56 @@ class Queue<T> {         //T serve per il tipo generico della coda
 
 class ResultCollector {
 
-    private Semaphore mutex = new Semaphore(1);
+    private final Semaphore mutex = new Semaphore(1);
+    private final Semaphore[] libera;
+    private final Semaphore[] piena;
 
-    public void ResultCollector(Queue q, Semaphore mutex) {
-        this.q = q;
+    private final int N;
+    private final Messaggio[] messaggio;
+    private int successiva = 0;
+    
+    public ResultCollector(int N) {
+        this.N = N;
+        this.messaggio = new Messaggio[N];
+        this.piena = new Semaphore[N];
+        this.libera = new Semaphore[N];
+        
+        for(int i = 0; i < N; i++) {
+            libera[i] = new Semaphore(1);
+            piena[i] = new Semaphore(0);
+        }
+    }
+    
+    public void put(Messaggio m) throws InterruptedException {
+        int pos = m.k % N;
+        
+        libera[pos].acquire();      //attende posizione libera
+        messaggio[pos] = m;                 //scrive
+        piena[pos].release();       //ora è piena
+    }
+    
+    public Messaggio get() throws InterruptedException {
+        mutex.acquire();
+        int pos = successiva;
+        successiva = (successiva + 1) % N;
+        
+        piena[pos].acquire();
+        Messaggio m = messaggio[pos];
+        libera[pos].release();
+        
+        mutex.release();
+        return m;
+    }
+}
 
-        mutex.aquire();
-        mutex.relise();
+class Messaggio {
+    public final Object[] v;        //vettore di K valori
+    public final int k;             //numero del k-esimo valore del vettore
+    public final int res;           //risultato di Precessor
+    
+    public Messaggio(int k, Object[] v, int res) {
+        this.k = k;
+        this.v = v;
+        this.res = res;
     }
 }
