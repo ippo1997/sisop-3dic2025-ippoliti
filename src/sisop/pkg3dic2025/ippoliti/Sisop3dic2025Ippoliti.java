@@ -40,7 +40,7 @@ public class Sisop3dic2025Ippoliti {
         int IT = input.nextInt();
         input.close(); 
         
-        Queue q = new Queue(L);
+        Queue<Integer> q = new Queue(L);
         GeneratorThread gt = new GeneratorThread(q, TG);
         ProcessorThread[] pt = new ProcessorThread[N];
         ResultCollector rc = new ResultCollector(N);
@@ -58,9 +58,43 @@ public class Sisop3dic2025Ippoliti {
         for(int i = 0; i < N; i++)
             pt[i] = new ProcessorThread(i+1, K, TP, DP, q, rc);
         
-        
+        PrintThread print1 = new PrintThread(rc, IT);
+        PrintThread print2 = new PrintThread(rc, IT);
+
+        gt.start();
+        for(ProcessorThread processor : pt) //avvio
+            processor.start();
+        print1.start();
+        print2.start();
         
         Thread.sleep(10000);
+        
+        gt.interrupt();
+        for(ProcessorThread processor : pt) //interrompi
+            processor.interrupt();
+        print1.interrupt();
+        print2.interrupt();
+        
+        gt.join();
+        for(ProcessorThread processor : pt) //attendi (specificare perché)
+            processor.join();
+        print1.join();
+        print2.join();
+        
+        System.out.println("GeneratorThread totali " + gt.getCount());
+          
+        for(int i = 0; i < N; i++) {
+            System.out.println("ProcessorThread " + (i+1) + "--> processati " + pt[i].getCount());
+        }
+        
+        System.out.println("PrintThread1 --> " + print1.getCount());
+        System.out.println("PrintThread2 --> " + print2.getCount());
+        
+        try {
+            System.out.println("Valori ancora in coda " + q.dimensione());
+        } catch (InterruptedException e) {                                          //specificare
+            System.out.println("Messaggi nel ResultCollector: " + rc.attesa());
+        }
     }
 }
 
@@ -68,8 +102,8 @@ class GeneratorThread extends Thread {
 
     private int TG = 0;             
     private final Queue<Integer> q;
-    private int n = 0;              //numero generato
-    public int count = 0;           //numero progressivo di generazione del valore
+    private int n = 0;              //numero generato attualmente
+    public int count = 0;           //conteggio
     
     public GeneratorThread(Queue<Integer> q, int TG) {
         this.TG = TG;
@@ -82,16 +116,20 @@ class GeneratorThread extends Thread {
         this.q = q;*/ 
 
         try {
-            while(true) {
+            while(true) {           //perché trovato meglio !isInterrupted() rispetto a true?
                 q.put(n);
                 n++;
                 count++;
                 Thread.sleep(TG);       
             }
         }
-        catch(InterruptedException e) {
-            System.out.println("GeneratorThread terminato");
-        }
+        catch(InterruptedException e) {}
+        
+        System.out.println("GeneratorThread terminato. Tot " + count); //specificare prodotti cosa
+    }
+    
+    public int getCount() {
+        return count;
     }
 }
 
@@ -130,34 +168,52 @@ class ProcessorThread extends Thread {
                     somma = somma + v;
                 int tot = somma * s;                  //calcola il risultato
                 
-                Thread.sleep(TP + r.nextInt(DP + 1));           //specificare
-                rc.put(progressivo, a, tot);        //inserisce nel ResultCollector --> da implementare
+                Thread.sleep(TP + r.nextInt(DP + 1));           //tempo variabile
+                Messaggio m = new Messaggio(progressivo, a, tot);
+                rc.put(m);        //inserisce nel ResultCollector --> da implementare Messaggio
                 
             }
         } catch (InterruptedException e){
             System.out.println("ProcessorThread numero " + s + " --> terminato");
         }
+        System.out.println("ProcessorThread totali: " + count);
+    }
+    
+    public int getCount() {
+        return count;
     }
 }
 
 class PrintThread extends Thread {
     private final ResultCollector rc;
+    private final int IT;
+    private int count = 0;
     
-    public PrintThread(ResultCollector rc) {
+    public PrintThread(ResultCollector rc, int IT) {
         this.rc = rc;
+        this.IT = IT;
     }
     
     @Override
     public void run() {
-        while(true) {
-            try {
-                Messaggio m = rc.get(); //prende messaggio successivo
-                System.out.println("Il messaggio " + m.k + " ha risultato = " + m.res);
-            } catch (InterruptedException e) {
-                System.out.println("PrintThread fermato");
-                return;
+        try {
+            while (!isInterrupted()) {
+                Messaggio m = rc.get(); // prende messaggio successivo se ce ne sono
+                System.out.print("Messaggio " + m.k + ": [");
+                for (Object o : m.v)
+                    System.out.print(o + " ");
+                System.out.println("] --> " + m.res);
+                count++;
+                Thread.sleep(IT);
             }
+        } catch (InterruptedException e) {
+            // terminazione richiesta
         }
+        System.out.println("PrintThread terminato, stampati: " + count);
+    }
+
+    public int getCount() {
+        return count;
     }
 }
 
@@ -165,7 +221,7 @@ class Queue<T> {         //T serve per il tipo generico della coda
     private final ArrayList<T> a;
     private final int L;
     private final Semaphore mutex = new Semaphore(1);   //semafori necessari
-    private final Semaphore vuoti;                      //per gli spazi liberi o pieni
+    private final Semaphore vuoti;                      //per gli spazi liberi e pieni
     private final Semaphore pieni;
     
     public Queue(int L) {          //tolto void perché costruttore
@@ -214,7 +270,7 @@ class Queue<T> {         //T serve per il tipo generico della coda
         mutex.release();
         vuoti.release();                //rilasciato il vuoto
         
-        for(int i = 0; i < K; i++)
+        for(int i = 1; i < K; i++)
             pieni.release();            //rilasciati i restanti ancora pieni
         
         return vett;
@@ -270,6 +326,13 @@ class ResultCollector {
         
         mutex.release();
         return m;
+    }
+    
+    public int attesa() {
+        int c = 0;
+        for (Messaggio m : messaggio)
+            if (m != null) c++;
+        return c;
     }
 }
 
