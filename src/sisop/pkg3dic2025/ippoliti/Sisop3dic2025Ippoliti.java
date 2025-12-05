@@ -9,6 +9,7 @@ package sisop.pkg3dic2025.ippoliti;
  * @author Gabriele
  * - aggiunti costruttori e metodi mancanti
  * - aggiunti semafori mancanti
+ * - repo https://github.com/ippo1997/sisop-3dic2025-ippoliti
  */
 
 import java.util.ArrayList;
