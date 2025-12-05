@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 import java.util.Scanner;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger; 
 
 public class Sisop3dic2025Ippoliti {
 
@@ -23,6 +24,9 @@ public class Sisop3dic2025Ippoliti {
      * @param args the command line arguments
      * 
      */
+    
+    final static AtomicInteger globalSeq = new AtomicInteger(0); //soluzione per contatore condiciso da tutti i processorThread
+    
     public static void main(String[] args) throws InterruptedException {
         Scanner input = new Scanner(System.in);
         System.out.print("Inserire numero ProcessorThread = ");
@@ -117,7 +121,7 @@ class GeneratorThread extends Thread {
         this.q = q;*/ 
 
         try {
-            while(true) {           //perché trovato meglio !isInterrupted() rispetto a true?
+            while(true) {          
                 q.put(n);
                 n++;
                 count++;
@@ -143,7 +147,7 @@ class ProcessorThread extends Thread {
     private final Queue<Integer> q;
     private final ResultCollector rc;
     private final Random r = new Random();
-    private int p = 0;              //specificare numero progressivo indipendente
+    //private int p = 0;              //specificare numero progressivo indipendente
     public int count = 0;
     
     public ProcessorThread(int s, int K, int TP, int DP, Queue<Integer> q, ResultCollector rc) {
@@ -159,14 +163,17 @@ class ProcessorThread extends Thread {
     public void run() {
         try {
             while(true) {
-                Integer[] a = q.getnum(K);            //aspetta K elementi per prenderli rimuovendo solo il primo
-                int progressivo = p;
-                p++;
-                count++;
+                Object[] a = q.getnum(K);            //aspetta K elementi per prenderli rimuovendo solo il primo
+                //int progressivo = p;
+                //p++;
+                int progressivo = Sisop3dic2025Ippoliti.globalSeq.getAndIncrement();
+
                 
                 int somma = 0;
-                for (int v : a)
+                for (Object o : a) {
+                    int v = (Integer) o;
                     somma = somma + v;
+                }
                 int tot = somma * s;                  //calcola il risultato
                 
                 Thread.sleep(TP + r.nextInt(DP + 1));           //tempo variabile
