@@ -24,22 +24,41 @@ public class Sisop3dic2025Ippoliti {
      */
     public static void main(String[] args) throws InterruptedException {
         Scanner input = new Scanner(System.in);
+        System.out.print("Inserire numero ProcessorThread = ");
         int N = input.nextInt();
+        System.out.print("Inserire dimensione della coda = ");
         int L = input.nextInt();
-        
+        System.out.print("Inserire dimensione dei messaggi = ");
+        int K = input.nextInt();
+        System.out.print("Inserire il tempo di generazione dei valori = ");
+        int TG = input.nextInt();
+        System.out.print("Inserire il tempo minimo di elaborazione del messaggio = ");
+        int TP = input.nextInt();
+        System.out.print("Inserire intervallo massimo rispeto al tempo minimo = ");
+        int DP = input.nextInt();
+        System.out.print("Inserire l'intervallo di tempo tra un messaggio e l'altro = ");
+        int IT = input.nextInt();
         input.close(); 
+        
+        Queue q = new Queue(L);
         GeneratorThread gt = new GeneratorThread(q, TG);
         ProcessorThread[] pt = new ProcessorThread[N];
-        Queue q = new Queue(L);
-
-
-        /* while(true) {
+        ResultCollector rc = new ResultCollector(N);
+        
+        /* 
+        ---vecchio ciclo---
+        while(true) {
             gt.start();
             for(int i = 0; i < N; i++)
                 pt.start();
 
          --- sleep fuori ciclo ---   
         } */
+        
+        for(int i = 0; i < N; i++)
+            pt[i] = new ProcessorThread(i+1, K, TP, DP, q, rc);
+        
+        
         
         Thread.sleep(10000);
     }
