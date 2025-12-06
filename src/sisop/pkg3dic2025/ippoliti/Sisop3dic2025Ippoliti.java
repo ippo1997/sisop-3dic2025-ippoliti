@@ -106,7 +106,7 @@ class GeneratorThread extends Thread {
         this.q = q;
     }
 
-    @Override                       //perché NetBeans me lo richiede?
+    @Override                       //conferma che stai facendo override di un metodo
     public void run() {
         /*this.TG = TG; ---> nel costruttore
         this.q = q;*/ 
@@ -121,7 +121,7 @@ class GeneratorThread extends Thread {
         }
         catch(InterruptedException e) {}
         
-        System.out.println("GeneratorThread terminato. Totale numeri generati: " + count); //specificare prodotti cosa
+        System.out.println("GeneratorThread terminato. Totale numeri generati: " + count); //quanti valori prodotti nella coda
     }
 }
 
@@ -146,7 +146,7 @@ class ProcessorThread extends Thread {
         this.rc = rc;
     }
     
-    @Override
+    @Override                       
     public void run() {
         try {
             while(true) {
@@ -184,10 +184,10 @@ class PrintThread extends Thread {
         this.id = id;
     }
     
-    @Override
+    @Override               
     public void run() {
         try {
-            while (!isInterrupted()) {
+            while (!isInterrupted()) {  //!isInterrupted() -> rispetto a true non è "ciclo infinito", ma è un ciclo che deve continuare finché non correttamente interrotto
                 Messaggio m = rc.get(); // prende messaggio successivo se ce ne sono
                 System.out.print("PT" + m.ptId + " messaggio " + m.k + ": [");
                 for (Object o : m.v)
@@ -211,8 +211,8 @@ class Queue<T> {         //T serve per il tipo generico della coda
     public Queue(int L) {          //tolto void perché costruttore
         this.L = L;
         this.a = new ArrayList<>(L);    //sintassi sbagliata tolto ArrayList<int>
-        vuoti = new Semaphore(L);  // specificare
-        pieni = new Semaphore(0);
+        vuoti = new Semaphore(L);  // setve al producer -> coda piena aspetta (aquire) -> quando si libera spazio viene incrementato (release)
+        pieni = new Semaphore(0); // serve ai consumer -> con coda vuota aspettano (aquire) -> quanbdo c'è un elemento (release)
     }
 
     public void put(T v) throws InterruptedException {
@@ -244,7 +244,7 @@ class Queue<T> {         //T serve per il tipo generico della coda
     
     public T[] getnum(int K, T[] vett) throws InterruptedException {
         for(int i = 0; i < K; i++)
-            pieni.acquire();
+            pieni.acquire();            //aspetta che ci siano K elementi
         
         mutex.acquire();                //entra in sezione critica per leggere i valori
         for(int i = 0; i < K; i++)
@@ -264,7 +264,7 @@ class Queue<T> {         //T serve per il tipo generico della coda
         int d = a.size();
         mutex.release();
         
-        return d;
+        return d;           //quanti elementi ancora in attesa
     }
 }
 
@@ -299,11 +299,11 @@ class ResultCollector {
     }
     
     public Messaggio get() throws InterruptedException {
-        mutex.acquire();
+        mutex.acquire();                    //un thread alla volta deve aggiornare la posizione
         int pos = successiva;
         successiva = (successiva + 1) % N;
         
-        piena[pos].acquire();
+        piena[pos].acquire();               //attente finché il messaggio in quella posizione non è pronto
         Messaggio m = messaggio[pos];
         libera[pos].release();
         
@@ -312,7 +312,7 @@ class ResultCollector {
     }
     
     public int pronti() {
-        int c = 0;
+        int c = 0;                              //contatore dei messaggi pronti
         for (Messaggio m : messaggio)
             if (m != null) c++;
         return c;
