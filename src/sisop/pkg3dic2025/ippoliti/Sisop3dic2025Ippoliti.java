@@ -63,8 +63,8 @@ public class Sisop3dic2025Ippoliti {
         for(int i = 0; i < N; i++)
             pt[i] = new ProcessorThread(i+1, K, TP, DP, q, rc);
         
-        PrintThread print1 = new PrintThread(rc, IT);
-        PrintThread print2 = new PrintThread(rc, IT);
+        PrintThread print1 = new PrintThread(rc, IT, 1);
+        PrintThread print2 = new PrintThread(rc, IT, 2);
 
         gt.start();
         for(ProcessorThread processor : pt) //avvio
@@ -87,9 +87,9 @@ public class Sisop3dic2025Ippoliti {
         print2.join();
         
         try {
-            System.out.println("Valori ancora in coda " + q.dimensione());
-        } catch (InterruptedException e) {                                          //specificare
-            System.out.println("Messaggi nel ResultCollector: " + rc.attesa());
+            System.out.println(q.dimensione() + " elementi ancora in coda ");
+        } catch (InterruptedException e) {                                          //in alternativa numero di messaggi nel ResultCollector che sono stati scritti
+            System.out.println("Messaggi nel ResultCollector: " + rc.pronti());
         }
     }
 }
@@ -163,11 +163,11 @@ class ProcessorThread extends Thread {
                 count++;
                 
                 Thread.sleep(TP + r.nextInt(DP + 1));           //tempo variabile
-                Messaggio m = new Messaggio(progressivo, a, tot);
+                Messaggio m = new Messaggio(progressivo, a, tot, s);
                 rc.put(m);        //inserisce nel ResultCollector --> da implementare Messaggio
             }
         } catch (InterruptedException e){
-            System.out.println("ProcessorThread " + s + "terminato. Messaggi totali: " + count);
+            System.out.println("ProcessorThread " + s + " terminato. Messaggi totali: " + count);
         }
     }
 }
@@ -176,10 +176,12 @@ class PrintThread extends Thread {
     private final ResultCollector rc;
     private final int IT;
     private int count = 0;
+    private final int id;
     
-    public PrintThread(ResultCollector rc, int IT) {
+    public PrintThread(ResultCollector rc, int IT, int id) {
         this.rc = rc;
         this.IT = IT;
+        this.id = id;
     }
     
     @Override
@@ -187,7 +189,7 @@ class PrintThread extends Thread {
         try {
             while (!isInterrupted()) {
                 Messaggio m = rc.get(); // prende messaggio successivo se ce ne sono
-                System.out.print("Messaggio " + m.k + ": [");
+                System.out.print("PT" + m.ptId + " messaggio " + m.k + ": [");
                 for (Object o : m.v)
                     System.out.print(o + " ");
                 System.out.println("] --> " + m.res);
@@ -195,7 +197,7 @@ class PrintThread extends Thread {
                 Thread.sleep(IT);
             }
         } catch (InterruptedException e) {}
-        System.out.println("PrintThread terminato --> stampati: " + count);
+        System.out.println("PrintThread " + id + " terminato --> stampati: " + count);
     }
 }
 
@@ -309,7 +311,7 @@ class ResultCollector {
         return m;
     }
     
-    public int attesa() {
+    public int pronti() {
         int c = 0;
         for (Messaggio m : messaggio)
             if (m != null) c++;
@@ -321,10 +323,12 @@ class Messaggio {
     public final Object[] v;        //vettore di K valori
     public final int k;             //numero del k-esimo valore del vettore
     public final int res;           //risultato di Precessor
+    public final int ptId;          //id del ProcesssorThread
     
-    public Messaggio(int k, Object[] v, int res) {
+    public Messaggio(int k, Object[] v, int res, int ptId) {
         this.k = k;
         this.v = v;
         this.res = res;
+        this.ptId = ptId;
     }
 }
